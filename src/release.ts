@@ -2,7 +2,7 @@ import {context} from '@actions/github'
 import {PaginateInterface} from '@octokit/plugin-paginate-rest'
 import {Version, DownloadRelease} from './types'
 
-export async function getDownloadReleases(
+export async function listDownloadReleases(
   paginate: PaginateInterface
 ): Promise<DownloadRelease[]> {
   return paginate('GET /repos/{owner}/{repo}/releases', {
@@ -24,14 +24,26 @@ export async function getDownloadReleases(
       }
     }
     const downloadReleases = [] as DownloadRelease[]
-    for (const publishedVersion of publishedVersions) {
-      const downloadRelease = DownloadRelease.fromTag(publishedVersion)
+    for (const version of response) {
+      const downloadRelease = DownloadRelease.fromTag(version.tag_name)
       if (downloadRelease) {
         const major = downloadRelease.major
+        if (version.body) {
+          downloadRelease.currentVersion = extractVersionFromBody(version.body)
+        }
         downloadRelease.latestVersion = versions[major]
         downloadReleases[major] = downloadRelease
       }
     }
     return downloadReleases
   })
+}
+
+function extractVersionFromBody(body: String) {
+  for (const bodyLine of body.split('\n')) {
+    const version = Version.fromTag(bodyLine)
+    if (version) {
+      return version
+    }
+  }
 }

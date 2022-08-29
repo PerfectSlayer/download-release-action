@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {getOctokit} from '@actions/github'
-import {getDownloadReleases} from './release'
+import {listDownloadReleases} from './release'
 
 interface OctokitOptions {
   log?: {
@@ -22,8 +22,7 @@ async function run(): Promise<void> {
     }
     const github = getOctokit(token, opts)
     // Get download releases
-    const downloadReleases = await getDownloadReleases(github.paginate)
-    console.info("found releases")
+    const downloadReleases = await listDownloadReleases(github.paginate)
     console.debug(downloadReleases)
 
     // const ms: string = core.getInput('milliseconds')

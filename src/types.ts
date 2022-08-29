@@ -3,6 +3,8 @@ class Version {
   minor: number
   bugfix: number
 
+  static readonly pattern = /v(\d+)\.(\d+)\.(\d+)/
+
   constructor(major: number, minor: number, bugfix: number) {
     this.major = major
     this.minor = minor
@@ -24,8 +26,7 @@ class Version {
   }
 
   static fromTag(tag: String) {
-    const versionPattern = /v(\d+)\.(\d+)\.(\d+)/
-    const match = tag.match(versionPattern)
+    const match = tag.match(Version.pattern)
     if (match) {
       return new Version(
         parseInt(match[1]),
@@ -59,6 +60,14 @@ class DownloadRelease {
     if (match) {
       return new DownloadRelease(parseInt(match[1]))
     }
+  }
+
+  needUpdate() {
+    return (
+      this.currentVersion !== undefined &&
+      this.latestVersion !== undefined &&
+      this.latestVersion.isNewerThan(this.currentVersion)
+    )
   }
 }
 

@@ -50,8 +50,8 @@ function run() {
             }
             const github = (0, github_1.getOctokit)(token, opts);
             // Get download releases
-            const downloadReleases = yield (0, release_1.getDownloadReleases)(github.paginate);
-            console.info("found releases");
+            const downloadReleases = yield (0, release_1.listDownloadReleases)(github.paginate);
+            console.info('found releases');
             console.debug(downloadReleases);
             // const ms: string = core.getInput('milliseconds')
             // core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
@@ -86,10 +86,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getDownloadReleases = void 0;
+exports.listDownloadReleases = void 0;
 const github_1 = __nccwpck_require__(5438);
 const types_1 = __nccwpck_require__(8164);
-function getDownloadReleases(paginate) {
+function listDownloadReleases(paginate) {
     return __awaiter(this, void 0, void 0, function* () {
         return paginate('GET /repos/{owner}/{repo}/releases', {
             owner: github_1.context.repo.owner,
@@ -109,10 +109,13 @@ function getDownloadReleases(paginate) {
                 }
             }
             const downloadReleases = [];
-            for (const publishedVersion of publishedVersions) {
-                const downloadRelease = types_1.DownloadRelease.fromTag(publishedVersion);
+            for (const version of response) {
+                const downloadRelease = types_1.DownloadRelease.fromTag(version.tag_name);
                 if (downloadRelease) {
                     const major = downloadRelease.major;
+                    if (version.body) {
+                        downloadRelease.currentVersion = extractVersionFromBody(version.body);
+                    }
                     downloadRelease.latestVersion = versions[major];
                     downloadReleases[major] = downloadRelease;
                 }
@@ -121,7 +124,15 @@ function getDownloadReleases(paginate) {
         });
     });
 }
-exports.getDownloadReleases = getDownloadReleases;
+exports.listDownloadReleases = listDownloadReleases;
+function extractVersionFromBody(body) {
+    for (const bodyLine of body.split('\n')) {
+        const version = types_1.Version.fromTag(bodyLine);
+        if (version) {
+            return version;
+        }
+    }
+}
 
 
 /***/ }),
@@ -155,14 +166,14 @@ class Version {
         return this.bugfix > other.bugfix;
     }
     static fromTag(tag) {
-        const versionPattern = /v(\d+)\.(\d+)\.(\d+)/;
-        const match = tag.match(versionPattern);
+        const match = tag.match(Version.pattern);
         if (match) {
             return new Version(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]));
         }
     }
 }
 exports.Version = Version;
+Version.pattern = /v(\d+)\.(\d+)\.(\d+)/;
 class Release {
     constructor(version) {
         this.version = version;
@@ -178,6 +189,11 @@ class DownloadRelease {
         if (match) {
             return new DownloadRelease(parseInt(match[1]));
         }
+    }
+    needUpdate() {
+        return (this.currentVersion !== undefined &&
+            this.latestVersion !== undefined &&
+            this.latestVersion.isNewerThan(this.currentVersion));
     }
 }
 exports.DownloadRelease = DownloadRelease;
