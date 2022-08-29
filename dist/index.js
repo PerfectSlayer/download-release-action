@@ -50,7 +50,8 @@ function run() {
             }
             const github = (0, github_1.getOctokit)(token, opts);
             // Get download releases
-            const downloadReleases = (0, release_1.getDownloadReleases)(github.paginate);
+            const downloadReleases = yield (0, release_1.getDownloadReleases)(github.paginate);
+            console.info("found releases");
             console.debug(downloadReleases);
             // const ms: string = core.getInput('milliseconds')
             // core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
@@ -90,8 +91,12 @@ const github_1 = __nccwpck_require__(5438);
 const types_1 = __nccwpck_require__(8164);
 function getDownloadReleases(paginate) {
     return __awaiter(this, void 0, void 0, function* () {
-        return paginate("GET /repos/{owner}/{repo}/releases", { owner: github_1.context.repo.owner, repo: github_1.context.repo.repo }).then(response => {
-            const publishedVersions = response.filter(release => !release.draft && !release.prerelease)
+        return paginate('GET /repos/{owner}/{repo}/releases', {
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo
+        }).then(response => {
+            const publishedVersions = response
+                .filter(release => !release.draft && !release.prerelease)
                 .map(release => release.tag_name);
             const versions = [];
             for (const publishedVersion of publishedVersions) {
@@ -147,7 +152,7 @@ class Version {
         else if (this.minor < other.minor) {
             return false;
         }
-        return (this.bugfix > other.bugfix);
+        return this.bugfix > other.bugfix;
     }
     static fromTag(tag) {
         const versionPattern = /v(\d+)\.(\d+)\.(\d+)/;

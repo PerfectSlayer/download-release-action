@@ -1,25 +1,30 @@
-import * as core from '@actions/core';
-import { getOctokit } from '@actions/github';
-import { getDownloadReleases } from './release';
+import * as core from '@actions/core'
+import {getOctokit} from '@actions/github'
+import {getDownloadReleases} from './release'
 
-type Options = {
-  log?: Console
+interface OctokitOptions {
+  log?: {
+    debug: (message: string) => unknown
+    info: (message: string) => unknown
+    warn: (message: string) => unknown
+    error: (message: string) => unknown
+  }
 }
 
 async function run(): Promise<void> {
   try {
     // Create octokit client
-    const token = core.getInput('github-token', { required: true });
+    const token = core.getInput('github-token', {required: true})
     const debug = core.getInput('debug')
-    const opts: Options = {}
+    const opts = {} as OctokitOptions
     if (debug === 'true') {
-      opts.log = console;
+      opts.log = console
     }
-    const github = getOctokit(token, opts);
+    const github = getOctokit(token, opts)
     // Get download releases
-    const downloadReleases = getDownloadReleases(github.paginate);
-    console.debug(downloadReleases);
-
+    const downloadReleases = await getDownloadReleases(github.paginate)
+    console.info("found releases")
+    console.debug(downloadReleases)
 
     // const ms: string = core.getInput('milliseconds')
     // core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
