@@ -2,10 +2,14 @@ name: 'Your name here'
 description: 'Provide a description here'
 author: 'Your name or organization here'
 inputs:
-  debug:
+  github-token:
+    description: The GitHub token used to create an authenticated client
+    default: ${{ github.token }}
     required: false
-    description: 'wheter output logs to the console'
+  debug:
+    description: Whether to tell the GitHub client to log details of its requests
     default: false
+    required: false
 runs:
   using: 'node16'
   main: 'dist/index.js'
