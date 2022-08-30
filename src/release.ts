@@ -66,8 +66,10 @@ export async function updateRelease(github: GitHub, release: DownloadRelease): P
 }
 
 export async function downloadAgentAsset(version: Version): Promise<void> {
-  const url = `https://github.com/DataDog/dd-trace-java/releases/download/${version.tagName()}/dd-java-agent-${version.toString()}.jar`
-  await download(url, '.', {filename: assetFile})
+  const url = `https://github.com/${context.repo.owner}/${
+    context.repo.repo
+  }/releases/download/${version.tagName()}/dd-java-agent.jar`
+  await download(url, '.')
 }
 
 async function updateReleaseAsset(github: GitHub, release: DownloadRelease, localFileName: string): Promise<void> {

@@ -185,8 +185,8 @@ function updateRelease(github, release) {
 exports.updateRelease = updateRelease;
 function downloadAgentAsset(version) {
     return __awaiter(this, void 0, void 0, function* () {
-        const url = `https://github.com/DataDog/dd-trace-java/releases/download/${version.tagName()}/dd-java-agent-${version.toString()}.jar`;
-        yield (0, download_1.default)(url, '.', { filename: assetFile });
+        const url = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/releases/download/${version.tagName()}/dd-java-agent.jar`;
+        yield (0, download_1.default)(url, '.');
     });
 }
 exports.downloadAgentAsset = downloadAgentAsset;
