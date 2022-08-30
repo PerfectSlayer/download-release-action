@@ -122,7 +122,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.updateRelease = exports.listReleases = void 0;
 const fs = __importStar(__nccwpck_require__(5747));
-const http = __importStar(__nccwpck_require__(8605));
+const https = __importStar(__nccwpck_require__(7211));
 const github_1 = __nccwpck_require__(5438);
 const types_1 = __nccwpck_require__(8164);
 const assetFile = 'dd-java-agent.jar';
@@ -185,7 +185,7 @@ function downloadAgentAsset(version) {
 }
 function downloadFile(url) {
     const file = fs.createWriteStream(assetFile);
-    http.get(url, function (response) {
+    https.get(url, function (response) {
         response.pipe(file);
         file.on('finish', () => {
             file.close();

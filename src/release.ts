@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import * as http from 'http'
+import * as https from 'https'
 import {context} from '@actions/github'
 import {DownloadRelease, GitHub, Version} from './types'
 
@@ -73,7 +73,7 @@ function downloadAgentAsset(version: Version): void {
 
 function downloadFile(url: string): void {
   const file = fs.createWriteStream(assetFile)
-  http.get(url, function (response) {
+  https.get(url, function (response) {
     response.pipe(file)
     file.on('finish', () => {
       file.close()
