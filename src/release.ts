@@ -80,7 +80,7 @@ async function updateReleaseAsset(github: GitHub, release: DownloadRelease, loca
   const assetName = currentAsset ? `dd-java-agent-${release.latestVersion.tagName()}.jar` : assetFile
   const newAsset = await uploadAsset(github, release, localFileName, assetName)
   if (currentAsset) {
-    await renameAsset(github, release, currentAsset, newAsset)
+    await renameAsset(github, release, newAsset, currentAsset)
   }
 }
 

@@ -199,7 +199,7 @@ function updateReleaseAsset(github, release, localFileName) {
         const assetName = currentAsset ? `dd-java-agent-${release.latestVersion.tagName()}.jar` : assetFile;
         const newAsset = yield uploadAsset(github, release, localFileName, assetName);
         if (currentAsset) {
-            yield renameAsset(github, release, currentAsset, newAsset);
+            yield renameAsset(github, release, newAsset, currentAsset);
         }
     });
 }
