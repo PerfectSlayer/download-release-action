@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import {getOctokit} from '@actions/github'
-import {listDownloadReleases} from './release'
+import {listReleases, updateRelease} from './release'
 
 interface OctokitOptions {
   log?: {
@@ -21,9 +21,19 @@ async function run(): Promise<void> {
       opts.log = console
     }
     const github = getOctokit(token, opts)
-    // Get download releases
-    const downloadReleases = await listDownloadReleases(github.paginate)
-    console.debug(downloadReleases)
+    // Try to update all releases
+    const downloadReleases = await listReleases(github)
+    for (const release of downloadReleases) {
+      if (release.needUpdate()) {
+        core.info(
+          `ℹ️ Release ${release.tagName()} needs an update (${release.currentVersion?.toString()} => ${release.latestVersion?.toString()}).`
+        )
+        await updateRelease(github, release)
+        core.info(`✅ Release ${release.tagName()} was successfully updated.`)
+      } else {
+        core.info(`✅ Release ${release.tagName()} is up-to-date.`)
+      }
+    }
 
     // const ms: string = core.getInput('milliseconds')
     // core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
@@ -34,7 +44,7 @@ async function run(): Promise<void> {
 
     // core.setOutput('time', new Date().toTimeString())
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) core.setFailed(`❌ ${error.message}`)
   }
 }
 

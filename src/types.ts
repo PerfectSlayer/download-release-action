@@ -1,7 +1,12 @@
+import {Octokit} from '@octokit/core'
+import {Api} from '@octokit/plugin-rest-endpoint-methods/dist-types/types'
+import {PaginateInterface} from '@octokit/plugin-paginate-rest'
+// import {GitHub} from "@actions/github/lib/utils";
+
 class Version {
-  major: number
-  minor: number
-  bugfix: number
+  readonly major: number
+  readonly minor: number
+  readonly bugfix: number
 
   static readonly pattern = /v(\d+)\.(\d+)\.(\d+)/
 
@@ -25,44 +30,46 @@ class Version {
     return this.bugfix > other.bugfix
   }
 
-  static fromTag(tag: String) {
+  tagName(): string {
+    return `v${toString()}`
+  }
+
+  toString(): string {
+    return `${this.major}.${this.minor}.${this.bugfix}`
+  }
+
+  static fromTag(tag: String): Version | undefined {
     const match = tag.match(Version.pattern)
     if (match) {
-      return new Version(
-        parseInt(match[1]),
-        parseInt(match[2]),
-        parseInt(match[3])
-      )
+      return new Version(parseInt(match[1]), parseInt(match[2]), parseInt(match[3]))
     }
-  }
-}
-
-class Release {
-  version: Version
-
-  constructor(version: Version) {
-    this.version = version
   }
 }
 
 class DownloadRelease {
-  major: number
+  readonly id: number
+  readonly major: number
   currentVersion: Version | undefined
   latestVersion: Version | undefined
 
-  constructor(major: number) {
+  constructor(id: number, major: number) {
+    this.id = id
     this.major = major
   }
 
-  static fromTag(tag: String) {
+  static fromTag(id: number, tag: String): DownloadRelease | undefined {
     const pattern = /download-latest-v(\d+)/
     const match = tag.match(pattern)
     if (match) {
-      return new DownloadRelease(parseInt(match[1]))
+      return new DownloadRelease(id, parseInt(match[1]))
     }
   }
 
-  needUpdate() {
+  tagName(): string {
+    return `download-latest-v${toString()}`
+  }
+
+  needUpdate(): boolean {
     return (
       this.currentVersion !== undefined &&
       this.latestVersion !== undefined &&
@@ -71,4 +78,7 @@ class DownloadRelease {
   }
 }
 
-export {Version, DownloadRelease}
+// type GitHubClient = typeof GitHub
+type GitHub = Octokit & Api & {paginate: PaginateInterface}
+
+export {Version, DownloadRelease, GitHub}

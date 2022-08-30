@@ -22,19 +22,19 @@ test('Version ordering', async () => {
 })
 
 test('Download release tag parsing', () => {
-  expect(DownloadRelease.fromTag('download-latest-v1')).toStrictEqual(new DownloadRelease(1))
-  expect(DownloadRelease.fromTag('download-latest-v')).toBe(undefined)
-  expect(DownloadRelease.fromTag('v1.2.3')).toBe(undefined)
+  expect(DownloadRelease.fromTag(123456, 'download-latest-v1')).toStrictEqual(new DownloadRelease(123456, 1))
+  expect(DownloadRelease.fromTag(123456, 'download-latest-v')).toBe(undefined)
+  expect(DownloadRelease.fromTag(123456, 'v1.2.3')).toBe(undefined)
 })
 
 test('Download release update', () => {
-    const release = new DownloadRelease(1);
-    release.latestVersion = new Version(1,2,3);
-    expect(release.needUpdate()).toBe(false);
-    release.currentVersion = new Version(1,2,3);
-    expect(release.needUpdate()).toBe(false);
-    release.currentVersion = new Version(1,2,4);
-    expect(release.needUpdate()).toBe(false);
-    release.currentVersion = new Version(1,2,1);
-    expect(release.needUpdate()).toBe(true);
+  const release = new DownloadRelease(123456, 1)
+  release.latestVersion = new Version(1, 2, 3)
+  expect(release.needUpdate()).toBe(false)
+  release.currentVersion = new Version(1, 2, 3)
+  expect(release.needUpdate()).toBe(false)
+  release.currentVersion = new Version(1, 2, 4)
+  expect(release.needUpdate()).toBe(false)
+  release.currentVersion = new Version(1, 2, 1)
+  expect(release.needUpdate()).toBe(true)
 })
