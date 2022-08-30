@@ -1,7 +1,6 @@
 import {Octokit} from '@octokit/core'
 import {Api} from '@octokit/plugin-rest-endpoint-methods/dist-types/types'
 import {PaginateInterface} from '@octokit/plugin-paginate-rest'
-// import {GitHub} from "@actions/github/lib/utils";
 
 class Version {
   readonly major: number
@@ -66,7 +65,7 @@ class DownloadRelease {
   }
 
   tagName(): string {
-    return `download-latest-v${toString()}`
+    return `download-latest-v${this.major}`
   }
 
   needUpdate(): boolean {

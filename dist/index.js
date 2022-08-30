@@ -334,7 +334,7 @@ class DownloadRelease {
         }
     }
     tagName() {
-        return `download-latest-v${toString()}`;
+        return `download-latest-v${this.major}`;
     }
     needUpdate() {
         return (this.currentVersion !== undefined &&
