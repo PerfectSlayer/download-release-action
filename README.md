@@ -1,6 +1,6 @@
 # Download Release Action
 
-This GitHub action updates meta releases, called _download release_, to always provide the latest version for download.  
+This GitHub action updates meta releases, called _download releases_, to always provide the latest version for download.  
 
 ## Principle
 
@@ -56,7 +56,12 @@ $ npm test
 
 ## TODO
 
-* Add update release as output
-* Find a way to inject GitHub context before test initialization
-* Fix the last linter issue
-* Filter build from main branch and set up a distribution branch
+* Blocking:
+  * Fix the last linter issue
+* Improvements:
+  * Add update release as output
+  * Download attachment using different file names 
+  * Find a way to inject GitHub context before test initialization
+* Chores:
+  * Create release tag 
+  * Filter build from main branch and set up a distribution branch
