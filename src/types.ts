@@ -30,7 +30,7 @@ class Version {
   }
 
   tagName(): string {
-    return `v${toString()}`
+    return `v${this.toString()}`
   }
 
   toString(): string {

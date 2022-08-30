@@ -1,5 +1,5 @@
 import {DownloadRelease, Version} from '../src/types'
-import {expect, test, jest} from '@jest/globals'
+import {expect, test} from '@jest/globals'
 
 test('Version tag parsing', async () => {
   expect(Version.fromTag('v1.2.3')).toStrictEqual(new Version(1, 2, 3))
@@ -28,10 +28,10 @@ test('Download release tag parsing', () => {
 })
 
 test('Download release formatting', () => {
-  const release = DownloadRelease.fromTag(123456, "download-latest-v125");
-  expect(release).toBeDefined();
-  expect(release?.id).toBe(123456);
-  expect(release?.major).toBe(125);
+  const release = DownloadRelease.fromTag(123456, 'download-latest-v125')
+  expect(release).toBeDefined()
+  expect(release?.id).toBe(123456)
+  expect(release?.major).toBe(125)
 })
 
 test('Download release update', () => {
