@@ -144,7 +144,7 @@ async function updateReleaseBody(github: GitHub, release: DownloadRelease): Prom
     release_id: release.id,
     body:
       `# Download\n\n` +
-      `This release tracks the latest v${release.major} available, currently ${release.latestVersion}.`
+      `This release tracks the latest v${release.major} available, currently ${release.latestVersion?.tagName()}.`
   })
   if (response.status !== 200) {
     throw new Error(`Failed to update release ${release.major} body.`)

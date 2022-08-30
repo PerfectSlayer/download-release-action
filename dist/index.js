@@ -257,13 +257,14 @@ function renameAsset(github, release, fromAsset, toAsset) {
     });
 }
 function updateReleaseBody(github, release) {
+    var _a;
     return __awaiter(this, void 0, void 0, function* () {
         const response = yield github.rest.repos.updateRelease({
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo,
             release_id: release.id,
             body: `# Download\n\n` +
-                `This release tracks the latest v${release.major} available, currently ${release.latestVersion}.`
+                `This release tracks the latest v${release.major} available, currently ${(_a = release.latestVersion) === null || _a === void 0 ? void 0 : _a.tagName()}.`
         });
         if (response.status !== 200) {
             throw new Error(`Failed to update release ${release.major} body.`);
