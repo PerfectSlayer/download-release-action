@@ -39,6 +39,7 @@ const core = __importStar(__nccwpck_require__(2186));
 const github_1 = __nccwpck_require__(5438);
 const release_1 = __nccwpck_require__(878);
 function run() {
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         try {
             // Create octokit client
@@ -49,11 +50,22 @@ function run() {
                 opts.log = console;
             }
             const github = (0, github_1.getOctokit)(token, opts);
-            // Get download releases
-            const downloadReleases = yield (0, release_1.listDownloadReleases)(github.paginate);
-            for (const release of downloadReleases) {
+            // Try to update all releases
+            const releases = yield (0, release_1.listReleases)(github);
+            if (releases.length === 0) {
+                core.info('ℹ️ No release found');
+            }
+            else {
+                core.info(`ℹ️ ${releases.length} release found.`);
+            }
+            for (const release of releases) {
                 if (release.needUpdate()) {
-                    (0, release_1.updateDownloadRelease)(github, release);
+                    core.info(`ℹ️ Release ${release.tagName()} needs an update (${(_a = release.currentVersion) === null || _a === void 0 ? void 0 : _a.toString()} => ${(_b = release.latestVersion) === null || _b === void 0 ? void 0 : _b.toString()}).`);
+                    yield (0, release_1.updateRelease)(github, release);
+                    core.info(`✅ Release ${release.tagName()} was successfully updated.`);
+                }
+                else {
+                    core.info(`✅ Release ${release.tagName()} is up-to-date.`);
                 }
             }
             // const ms: string = core.getInput('milliseconds')
@@ -65,7 +77,7 @@ function run() {
         }
         catch (error) {
             if (error instanceof Error)
-                core.setFailed(error.message);
+                core.setFailed(`❌ ${error.message}`);
         }
     });
 }
@@ -108,153 +120,47 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.updateDownloadRelease = exports.listDownloadReleases = void 0;
+exports.updateRelease = exports.listReleases = void 0;
 const fs = __importStar(__nccwpck_require__(5747));
+const http = __importStar(__nccwpck_require__(8605));
 const github_1 = __nccwpck_require__(5438);
-const core = __importStar(__nccwpck_require__(2186));
 const types_1 = __nccwpck_require__(8164);
-function listDownloadReleases(paginate) {
+const assetFile = 'dd-java-agent.jar';
+function listReleases(github) {
     return __awaiter(this, void 0, void 0, function* () {
-        return paginate('GET /repos/{owner}/{repo}/releases', {
+        const response = yield github.paginate('GET /repos/{owner}/{repo}/releases', {
             owner: github_1.context.repo.owner,
             repo: github_1.context.repo.repo
-        }).then(response => {
-            const publishedVersions = response
-                .filter(release => !release.draft && !release.prerelease)
-                .map(release => release.tag_name);
-            const versions = [];
-            for (const publishedVersion of publishedVersions) {
-                const version = types_1.Version.fromTag(publishedVersion);
-                if (version) {
-                    const major = version.major;
-                    if (!versions[major] || version.isNewerThan(versions[major])) {
-                        versions[major] = version;
-                    }
-                }
-            }
-            const downloadReleases = [];
-            for (const version of response) {
-                const downloadRelease = types_1.DownloadRelease.fromTag(version.id, version.tag_name);
-                if (downloadRelease) {
-                    const major = downloadRelease.major;
-                    if (version.body) {
-                        downloadRelease.currentVersion = extractVersionFromBody(version.body);
-                    }
-                    downloadRelease.latestVersion = versions[major];
-                    downloadReleases[major] = downloadRelease;
-                }
-            }
-            return downloadReleases;
         });
+        const publishedVersions = response
+            .filter(release => !release.draft && !release.prerelease)
+            .map(release => release.tag_name);
+        const versions = [];
+        for (const publishedVersion of publishedVersions) {
+            const version = types_1.Version.fromTag(publishedVersion);
+            if (version) {
+                const major = version.major;
+                if (!versions[major] || version.isNewerThan(versions[major])) {
+                    versions[major] = version;
+                }
+            }
+        }
+        const downloadReleases = [];
+        for (const version of response) {
+            const downloadRelease = types_1.DownloadRelease.fromTag(version.id, version.tag_name);
+            if (downloadRelease) {
+                const major = downloadRelease.major;
+                if (version.body) {
+                    downloadRelease.currentVersion = extractVersionFromBody(version.body);
+                }
+                downloadRelease.latestVersion = versions[major];
+                downloadReleases[major] = downloadRelease;
+            }
+        }
+        return downloadReleases;
     });
 }
-exports.listDownloadReleases = listDownloadReleases;
-function updateDownloadRelease(github, release) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!release.needUpdate() || release.latestVersion === undefined) {
-            return;
-        }
-        // Get the current release asset
-        const assetFile = 'dd-java-agent.jar';
-        const newAssetFile = 'dd-java-agent-' + release.latestVersion.tagName() + '.jar';
-        const asset = yield github.rest.repos
-            .listReleaseAssets({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            release_id: release.id
-        })
-            .then(response => {
-            if (response.status === 200) {
-                for (const asset of response.data) {
-                    if (asset.name === assetFile) {
-                        return asset;
-                    }
-                }
-                return false;
-            }
-            else {
-                core.setFailed('Failed to list release assets.');
-            }
-        });
-        // Upload the new version to the release
-        const newAsset = yield github.rest.repos
-            .uploadReleaseAsset({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            release_id: release.id,
-            name: asset ? newAssetFile : assetFile,
-            data: fs.readFileSync(assetFile).toString()
-        })
-            .then(response => {
-            if (response.status === 201) {
-                return response.data;
-            }
-            else {
-                core.setFailed('Failed to upload ' +
-                    newAssetFile +
-                    ' to release ' +
-                    release.latestVersion +
-                    '.');
-            }
-        })
-            .catch(error => {
-            core.setFailed('Failed to upload asset: ' + error.message);
-        });
-        // Delete the old asset if exists, then rename the new one
-        if (asset) {
-            console.debug(asset);
-            github.rest.repos
-                .deleteReleaseAsset({
-                owner: github_1.context.repo.owner,
-                repo: github_1.context.repo.repo,
-                asset_id: asset.id
-            })
-                .then(response => {
-                if (response.status === 204) {
-                    return github.rest.repos.updateReleaseAsset({
-                        owner: github_1.context.repo.owner,
-                        repo: github_1.context.repo.repo,
-                        asset_id: newAsset ? newAsset.id : 0,
-                        name: assetFile
-                    });
-                }
-                else {
-                    core.setFailed('Failed to delete old asset.');
-                }
-            })
-                .then(response => {
-                if (!response || response.status !== 200) {
-                    // TODO FIX TYPE
-                    core.setFailed('Failed to update new asset name as default asset.');
-                }
-            })
-                .catch(error => {
-                core.setFailed('Failed to rename release asset: ' + error.message);
-            });
-        }
-        // Update release body with new version
-        github.rest.repos
-            .updateRelease({
-            owner: github_1.context.repo.owner,
-            repo: github_1.context.repo.repo,
-            release_id: release.id,
-            body: '# Download\n' +
-                '\n' +
-                'This release tracks the latest v' +
-                release.major +
-                ' available, currently ${{ steps.check-update.outputs.tag }}.'
-        })
-            .then(response => {
-            if (response.status !== 200) {
-                core.setFailed('Failed to update latest release body.');
-            }
-        })
-            .catch(error => {
-            core.setFailed('Failed to update release: ' + error.message);
-        });
-    });
-}
-exports.updateDownloadRelease = updateDownloadRelease;
+exports.listReleases = listReleases;
 function extractVersionFromBody(body) {
     for (const bodyLine of body.split('\n')) {
         const version = types_1.Version.fromTag(bodyLine);
@@ -262,6 +168,110 @@ function extractVersionFromBody(body) {
             return version;
         }
     }
+}
+function updateRelease(github, release) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!release.needUpdate() || release.latestVersion === undefined) {
+            return;
+        }
+        downloadAgentAsset(release.latestVersion);
+        yield updateReleaseAsset(github, release, assetFile);
+        yield updateReleaseBody(github, release);
+    });
+}
+exports.updateRelease = updateRelease;
+function downloadAgentAsset(version) {
+    downloadFile(`https://github.com/DataDog/dd-trace-java/releases/download/${version.tagName()}/dd-java-agent-${version.toString()}.jar`);
+}
+function downloadFile(url) {
+    const file = fs.createWriteStream(assetFile);
+    http.get(url, function (response) {
+        response.pipe(file);
+        file.on('finish', () => {
+            file.close();
+            // console.log('Download Completed')
+        });
+    });
+}
+function updateReleaseAsset(github, release, localFileName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (release.latestVersion === undefined) {
+            throw new Error('Failed to update asset. No latest version defined.');
+        }
+        const currentAsset = yield getAgentAsset(github, release);
+        const assetName = currentAsset ? `dd-java-agent-${release.latestVersion.tagName()}.jar` : assetFile;
+        const newAsset = yield uploadAsset(github, release, localFileName, assetName);
+        if (currentAsset) {
+            yield renameAsset(github, release, currentAsset, newAsset);
+        }
+    });
+}
+function getAgentAsset(github, release) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const assetResponse = yield github.rest.repos.listReleaseAssets({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            release_id: release.id
+        });
+        if (assetResponse.status !== 200) {
+            throw new Error(`Failed to list release ${release.major} assets.`);
+        }
+        for (const asset of assetResponse.data) {
+            if (asset.name === assetFile) {
+                return asset;
+            }
+        }
+    });
+}
+function uploadAsset(github, release, localFileName, assetName) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const uploadResponse = yield github.rest.repos.uploadReleaseAsset({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            release_id: release.id,
+            name: assetName,
+            data: fs.readFileSync(localFileName).toString()
+        });
+        if (uploadResponse.status !== 201) {
+            throw new Error(`Failed to upload ${localFileName} to release ${release.latestVersion}.`);
+        }
+        return uploadResponse.data;
+    });
+}
+function renameAsset(github, release, fromAsset, toAsset) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const deleteResponse = yield github.rest.repos.deleteReleaseAsset({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            asset_id: toAsset.id
+        });
+        if (deleteResponse.status !== 204) {
+            throw new Error(`Failed to delete asset ${toAsset.name}`);
+        }
+        const updateResponse = yield github.rest.repos.updateReleaseAsset({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            asset_id: fromAsset.id,
+            name: toAsset.name
+        });
+        if (updateResponse.status !== 200) {
+            throw new Error(`Failed to update asset name from ${fromAsset.name} to ${toAsset.name}.`);
+        }
+    });
+}
+function updateReleaseBody(github, release) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const response = yield github.rest.repos.updateRelease({
+            owner: github_1.context.repo.owner,
+            repo: github_1.context.repo.repo,
+            release_id: release.id,
+            body: `# Download\n\n` +
+                `This release tracks the latest v${release.major} available, currently ${release.latestVersion}.`
+        });
+        if (response.status !== 200) {
+            throw new Error(`Failed to update release ${release.major} body.`);
+        }
+    });
 }
 
 
@@ -274,6 +284,7 @@ function extractVersionFromBody(body) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DownloadRelease = exports.Version = void 0;
+// import {GitHub} from "@actions/github/lib/utils";
 class Version {
     constructor(major, minor, bugfix) {
         this.major = major;
@@ -296,7 +307,10 @@ class Version {
         return this.bugfix > other.bugfix;
     }
     tagName() {
-        return 'v' + this.major + '.' + this.minor + '.' + this.bugfix;
+        return `v${toString()}`;
+    }
+    toString() {
+        return `${this.major}.${this.minor}.${this.bugfix}`;
     }
     static fromTag(tag) {
         const match = tag.match(Version.pattern);
@@ -307,12 +321,6 @@ class Version {
 }
 exports.Version = Version;
 Version.pattern = /v(\d+)\.(\d+)\.(\d+)/;
-class Release {
-    constructor(id, version) {
-        this.id = id;
-        this.version = version;
-    }
-}
 class DownloadRelease {
     constructor(id, major) {
         this.id = id;
@@ -324,6 +332,9 @@ class DownloadRelease {
         if (match) {
             return new DownloadRelease(id, parseInt(match[1]));
         }
+    }
+    tagName() {
+        return `download-latest-v${toString()}`;
     }
     needUpdate() {
         return (this.currentVersion !== undefined &&

@@ -22,8 +22,13 @@ async function run(): Promise<void> {
     }
     const github = getOctokit(token, opts)
     // Try to update all releases
-    const downloadReleases = await listReleases(github)
-    for (const release of downloadReleases) {
+    const releases = await listReleases(github)
+    if (releases.length === 0) {
+      core.info('ℹ️ No release found')
+    } else {
+      core.info(`ℹ️ ${releases.length} release found.`)
+    }
+    for (const release of releases) {
       if (release.needUpdate()) {
         core.info(
           `ℹ️ Release ${release.tagName()} needs an update (${release.currentVersion?.toString()} => ${release.latestVersion?.toString()}).`
