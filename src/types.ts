@@ -70,9 +70,8 @@ class DownloadRelease {
 
   needUpdate(): boolean {
     return (
-      this.currentVersion !== undefined &&
       this.latestVersion !== undefined &&
-      this.latestVersion.isNewerThan(this.currentVersion)
+      (this.currentVersion === undefined || this.latestVersion.isNewerThan(this.currentVersion))
     )
   }
 }

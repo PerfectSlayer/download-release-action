@@ -284,7 +284,6 @@ function updateReleaseBody(github, release) {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DownloadRelease = exports.Version = void 0;
-// import {GitHub} from "@actions/github/lib/utils";
 class Version {
     constructor(major, minor, bugfix) {
         this.major = major;
@@ -337,9 +336,8 @@ class DownloadRelease {
         return `download-latest-v${this.major}`;
     }
     needUpdate() {
-        return (this.currentVersion !== undefined &&
-            this.latestVersion !== undefined &&
-            this.latestVersion.isNewerThan(this.currentVersion));
+        return (this.latestVersion !== undefined &&
+            (this.currentVersion === undefined || this.latestVersion.isNewerThan(this.currentVersion)));
     }
 }
 exports.DownloadRelease = DownloadRelease;
