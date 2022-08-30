@@ -1,6 +1,6 @@
 import * as fs from 'fs'
-import * as https from 'https'
 import {context} from '@actions/github'
+import download from 'download'
 import {DownloadRelease, GitHub, Version} from './types'
 
 const assetFile = 'dd-java-agent.jar'
@@ -60,26 +60,14 @@ export async function updateRelease(github: GitHub, release: DownloadRelease): P
   if (!release.needUpdate() || release.latestVersion === undefined) {
     return
   }
-  downloadAgentAsset(release.latestVersion)
+  await downloadAgentAsset(release.latestVersion)
   await updateReleaseAsset(github, release, assetFile)
   await updateReleaseBody(github, release)
 }
 
-function downloadAgentAsset(version: Version): void {
-  downloadFile(
-    `https://github.com/DataDog/dd-trace-java/releases/download/${version.tagName()}/dd-java-agent-${version.toString()}.jar`
-  )
-}
-
-function downloadFile(url: string): void {
-  const file = fs.createWriteStream(assetFile)
-  https.get(url, function (response) {
-    response.pipe(file)
-    file.on('finish', () => {
-      file.close()
-      // console.log('Download Completed')
-    })
-  })
+export async function downloadAgentAsset(version: Version): Promise<void> {
+  const url = `https://github.com/DataDog/dd-trace-java/releases/download/${version.tagName()}/dd-java-agent-${version.toString()}.jar`
+  await download(url, '.', {filename: assetFile})
 }
 
 async function updateReleaseAsset(github: GitHub, release: DownloadRelease, localFileName: string): Promise<void> {
