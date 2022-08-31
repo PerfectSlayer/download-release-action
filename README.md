@@ -53,11 +53,3 @@ Run the tests :heavy_check_mark:
 export GITHUB_REPOSITORY="owner/repo"
 $ npm test
 ```
-
-## TODO
-
-* Blocking:
-  * Fix the last linter issue
-* Chores:
-  * Create release tag 
-  * Filter build from main branch and set up a distribution branch

@@ -1,5 +1,13 @@
 {
-    "plugins": ["jest", "@typescript-eslint"],
+  "settings": {
+    "import/resolver": {
+      "node": {
+        "paths": ["src"],
+        "extensions": [".js", ".ts", ".d.ts", ".tsx"]
+      }
+    }
+  },
+  "plugins": ["jest", "@typescript-eslint"],
     "extends": ["plugin:github/recommended", "plugin:import/typescript"],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
