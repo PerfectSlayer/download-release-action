@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update releases
-        uses: PerfectSlayer/download-release-action@latest
+        uses: DataDog/download-release-action@latest
 ```
 
 The action has two inputs:
@@ -28,7 +28,7 @@ The action has two inputs:
 They can be configured with a `with` map:
 ```yaml
 - name: Update releases
-  uses: PerfectSlayer/download-release-action@latest
+  uses: DataDog/download-release-action@latest
   with:
     - github-token: ${{ env.MY_TOKEN }}
     - debug: true
