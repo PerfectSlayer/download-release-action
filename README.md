@@ -59,7 +59,6 @@ $ npm test
 * Blocking:
   * Fix the last linter issue
 * Improvements:
-  * Download attachment using different file names 
   * Find a way to inject GitHub context before test initialization
 * Chores:
   * Create release tag 

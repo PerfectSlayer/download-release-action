@@ -60,25 +60,27 @@ export async function updateRelease(github: GitHub, release: DownloadRelease): P
   if (!release.needUpdate() || release.latestVersion === undefined) {
     return
   }
-  await downloadAgentAsset(release.latestVersion)
-  await updateReleaseAsset(github, release, assetFile)
+  const fileName = await downloadAgentAsset(release.latestVersion)
+  await updateReleaseAsset(github, release, fileName)
   await updateReleaseBody(github, release)
 }
 
-export async function downloadAgentAsset(version: Version): Promise<void> {
+export async function downloadAgentAsset(version: Version): Promise<string> {
+  const fileName = `dd-java-agent-${version.toString()}.jar`
   const url = `https://github.com/${context.repo.owner}/${
     context.repo.repo
-  }/releases/download/${version.tagName()}/dd-java-agent.jar`
+  }/releases/download/${version.tagName()}/${fileName}`
   await download(url, '.')
+  return fileName
 }
 
-async function updateReleaseAsset(github: GitHub, release: DownloadRelease, localFileName: string): Promise<void> {
+async function updateReleaseAsset(github: GitHub, release: DownloadRelease, fileName: string): Promise<void> {
   if (release.latestVersion === undefined) {
     throw new Error('Failed to update asset. No latest version defined.')
   }
   const currentAsset = await getAgentAsset(github, release)
   const assetName = currentAsset ? `dd-java-agent-${release.latestVersion.tagName()}.jar` : assetFile
-  const newAsset = await uploadAsset(github, release, localFileName, assetName)
+  const newAsset = await uploadAsset(github, release, fileName, assetName)
   if (currentAsset) {
     await renameAsset(github, release, newAsset, currentAsset)
   }

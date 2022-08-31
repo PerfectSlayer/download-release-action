@@ -182,27 +182,29 @@ function updateRelease(github, release) {
         if (!release.needUpdate() || release.latestVersion === undefined) {
             return;
         }
-        yield downloadAgentAsset(release.latestVersion);
-        yield updateReleaseAsset(github, release, assetFile);
+        const fileName = yield downloadAgentAsset(release.latestVersion);
+        yield updateReleaseAsset(github, release, fileName);
         yield updateReleaseBody(github, release);
     });
 }
 exports.updateRelease = updateRelease;
 function downloadAgentAsset(version) {
     return __awaiter(this, void 0, void 0, function* () {
-        const url = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/releases/download/${version.tagName()}/dd-java-agent.jar`;
+        const fileName = `dd-java-agent-${version.toString()}.jar`;
+        const url = `https://github.com/${github_1.context.repo.owner}/${github_1.context.repo.repo}/releases/download/${version.tagName()}/${fileName}`;
         yield (0, download_1.default)(url, '.');
+        return fileName;
     });
 }
 exports.downloadAgentAsset = downloadAgentAsset;
-function updateReleaseAsset(github, release, localFileName) {
+function updateReleaseAsset(github, release, fileName) {
     return __awaiter(this, void 0, void 0, function* () {
         if (release.latestVersion === undefined) {
             throw new Error('Failed to update asset. No latest version defined.');
         }
         const currentAsset = yield getAgentAsset(github, release);
         const assetName = currentAsset ? `dd-java-agent-${release.latestVersion.tagName()}.jar` : assetFile;
-        const newAsset = yield uploadAsset(github, release, localFileName, assetName);
+        const newAsset = yield uploadAsset(github, release, fileName, assetName);
         if (currentAsset) {
             yield renameAsset(github, release, newAsset, currentAsset);
         }
