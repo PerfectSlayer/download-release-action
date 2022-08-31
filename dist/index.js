@@ -234,7 +234,7 @@ function uploadAsset(github, release, localFileName, assetName) {
             repo: github_1.context.repo.repo,
             release_id: release.id,
             name: assetName,
-            data: fs.readFileSync(localFileName).toString()
+            data: fs.readFileSync(localFileName) // https://github.com/octokit/octokit.js/issues/2086
         });
         if (uploadResponse.status !== 201) {
             throw new Error(`Failed to upload ${localFileName} to release ${release.latestVersion}.`);
