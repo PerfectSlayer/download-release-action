@@ -1,8 +1,10 @@
 import {listReleases} from '../src/release'
 import {DownloadRelease, Version} from '../src/types'
-import {expect, test, jest} from '@jest/globals'
+import {expect, jest, test} from '@jest/globals'
 
-test('get download releases', async () => {
+process.env['GITHUB_REPOSITORY'] = 'owner/repo'
+
+test('List releases', async () => {
   const mock = jest.fn()
   mock.mockReturnValueOnce(
     new Promise(resolve => {

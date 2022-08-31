@@ -58,8 +58,6 @@ $ npm test
 
 * Blocking:
   * Fix the last linter issue
-* Improvements:
-  * Find a way to inject GitHub context before test initialization
 * Chores:
   * Create release tag 
   * Filter build from main branch and set up a distribution branch
