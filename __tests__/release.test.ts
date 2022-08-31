@@ -27,7 +27,7 @@ test('get download releases', async () => {
         {
           id: 67890,
           tag_name: 'download-latest-v1',
-          body: '# Download v0\n\nThis release tracks the latest v0 available, currently v1.0.1.'
+          body: '# Download v1\n\nThis release tracks the latest v1 available, currently v1.0.1.'
         }
       ])
     })
