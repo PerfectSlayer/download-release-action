@@ -50,6 +50,5 @@ $ npm run build && npm run package
 
 Run the tests :heavy_check_mark:  
 ```
-export GITHUB_REPOSITORY="owner/repo"
 $ npm test
 ```
