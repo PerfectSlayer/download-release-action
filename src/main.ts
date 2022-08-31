@@ -28,6 +28,7 @@ async function run(): Promise<void> {
     } else {
       core.info(`ℹ️ ${releases.length} release found.`)
     }
+    const updatedReleases = []
     for (const release of releases) {
       if (release.needUpdate()) {
         core.info(
@@ -35,19 +36,12 @@ async function run(): Promise<void> {
         )
         await updateRelease(github, release)
         core.info(`✅ Release ${release.tagName()} was successfully updated.`)
+        updatedReleases.push(release)
       } else {
         core.info(`✅ Release ${release.tagName()} is up-to-date.`)
       }
     }
-
-    // const ms: string = core.getInput('milliseconds')
-    // core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-
-    // core.debug(new Date().toTimeString())
-    // await wait(parseInt(ms, 10))
-    // core.debug(new Date().toTimeString())
-
-    // core.setOutput('time', new Date().toTimeString())
+    core.setOutput('updated-releases', updatedReleases)
   } catch (error) {
     if (error instanceof Error) core.setFailed(`❌ ${error.message}`)
   }

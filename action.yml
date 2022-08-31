@@ -10,6 +10,9 @@ inputs:
     description: Whether to tell the GitHub client to log details of its requests
     default: 'false'
     required: false
+outputs:
+  updated-releases:
+    description: An array with the update release tags
 runs:
   using: 'node16'
   main: 'dist/index.js'
