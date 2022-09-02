@@ -35,12 +35,12 @@ export async function listReleases(github: GitHub): Promise<DownloadRelease[]> {
   for (const version of response) {
     const downloadRelease = DownloadRelease.fromTag(version.id, version.tag_name)
     if (downloadRelease) {
-      const major = downloadRelease.major
       if (version.body) {
         downloadRelease.currentVersion = extractVersionFromBody(version.body)
       }
+      const major = downloadRelease.major !== -1 ? downloadRelease.major : versions.length - 1
       downloadRelease.latestVersion = versions[major]
-      downloadReleases[major] = downloadRelease
+      downloadReleases.push(downloadRelease)
     }
   }
 
@@ -93,7 +93,7 @@ async function getAgentAsset(github: GitHub, release: DownloadRelease): Promise<
     release_id: release.id
   })
   if (assetResponse.status !== 200) {
-    throw new Error(`Failed to list release ${release.major} assets.`)
+    throw new Error(`Failed to list release ${release.id} assets.`)
   }
   for (const asset of assetResponse.data) {
     if (asset.name === assetFile) {
@@ -148,9 +148,11 @@ async function updateReleaseBody(github: GitHub, release: DownloadRelease): Prom
     release_id: release.id,
     body:
       `# Download\n\n` +
-      `This release tracks the latest v${release.major} available, currently ${release.latestVersion?.tagName()}.`
+      `This release tracks the latest ${
+        release.major === -1 ? `version` : `v${release.major}`
+      } available, currently ${release.latestVersion?.tagName()}.`
   })
   if (response.status !== 200) {
-    throw new Error(`Failed to update release ${release.major} body.`)
+    throw new Error(`Failed to update release ${release.id} body.`)
   }
 }

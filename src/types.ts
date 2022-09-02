@@ -47,6 +47,7 @@ class Version {
 
 class DownloadRelease {
   readonly id: number
+  /** The related major version, -1 if not bound to any major */
   readonly major: number
   currentVersion: Version | undefined
   latestVersion: Version | undefined
@@ -57,15 +58,16 @@ class DownloadRelease {
   }
 
   static fromTag(id: number, tag: String): DownloadRelease | undefined {
-    const pattern = /download-latest-v(\d+)/
+    const pattern = /^download-latest(?:-v(\d+))?$/
     const match = tag.match(pattern)
     if (match) {
-      return new DownloadRelease(id, parseInt(match[1]))
+      const major = match[1] ? parseInt(match[1]) : -1
+      return new DownloadRelease(id, major)
     }
   }
 
   tagName(): string {
-    return `download-latest-v${this.major}`
+    return this.major === -1 ? 'download-latest' : `download-latest-v${this.major}`
   }
 
   needUpdate(): boolean {

@@ -50,3 +50,17 @@ test('Download release update', () => {
   release.currentVersion = new Version(1, 2, 1)
   expect(release.needUpdate()).toBe(true)
 })
+
+test('Latest release update', () => {
+  const release = new DownloadRelease(123456, -1)
+  release.currentVersion = new Version(1, 2, 3)
+  // Older major version (even wih newer minor version) should not trigger an update
+  release.latestVersion = new Version(0, 3, 4)
+  expect(release.needUpdate()).toBe(false)
+  // Same version should not trigger an update
+  release.latestVersion = new Version(1, 2, 3)
+  expect(release.needUpdate()).toBe(false)
+  // Newer major version should trigger an update
+  release.latestVersion = new Version(2, 0, 0)
+  expect(release.needUpdate()).toBe(true)
+})

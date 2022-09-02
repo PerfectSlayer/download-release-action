@@ -157,12 +157,12 @@ function listReleases(github) {
         for (const version of response) {
             const downloadRelease = types_1.DownloadRelease.fromTag(version.id, version.tag_name);
             if (downloadRelease) {
-                const major = downloadRelease.major;
                 if (version.body) {
                     downloadRelease.currentVersion = extractVersionFromBody(version.body);
                 }
+                const major = downloadRelease.major !== -1 ? downloadRelease.major : versions.length - 1;
                 downloadRelease.latestVersion = versions[major];
-                downloadReleases[major] = downloadRelease;
+                downloadReleases.push(downloadRelease);
             }
         }
         return downloadReleases;
@@ -218,7 +218,7 @@ function getAgentAsset(github, release) {
             release_id: release.id
         });
         if (assetResponse.status !== 200) {
-            throw new Error(`Failed to list release ${release.major} assets.`);
+            throw new Error(`Failed to list release ${release.id} assets.`);
         }
         for (const asset of assetResponse.data) {
             if (asset.name === assetFile) {
@@ -271,10 +271,10 @@ function updateReleaseBody(github, release) {
             repo: github_1.context.repo.repo,
             release_id: release.id,
             body: `# Download\n\n` +
-                `This release tracks the latest v${release.major} available, currently ${(_a = release.latestVersion) === null || _a === void 0 ? void 0 : _a.tagName()}.`
+                `This release tracks the latest ${release.major === -1 ? `version` : `v${release.major}`} available, currently ${(_a = release.latestVersion) === null || _a === void 0 ? void 0 : _a.tagName()}.`
         });
         if (response.status !== 200) {
-            throw new Error(`Failed to update release ${release.major} body.`);
+            throw new Error(`Failed to update release ${release.id} body.`);
         }
     });
 }
@@ -331,14 +331,15 @@ class DownloadRelease {
         this.major = major;
     }
     static fromTag(id, tag) {
-        const pattern = /download-latest-v(\d+)/;
+        const pattern = /^download-latest(?:-v(\d+))?$/;
         const match = tag.match(pattern);
         if (match) {
-            return new DownloadRelease(id, parseInt(match[1]));
+            const major = match[1] ? parseInt(match[1]) : -1;
+            return new DownloadRelease(id, major);
         }
     }
     tagName() {
-        return `download-latest-v${this.major}`;
+        return this.major === -1 ? 'download-latest' : `download-latest-v${this.major}`;
     }
     needUpdate() {
         return (this.latestVersion !== undefined &&
