@@ -30,7 +30,3 @@ jobs:
           asset_path: dd-java-agent.jar
           asset_name: dd-java-agent.jar
           asset_content_type: application/java-archive
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Hello world action step
-        uses: ./ # Uses an action in the root directory
