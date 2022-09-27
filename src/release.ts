@@ -16,6 +16,8 @@ export async function listReleases(github: GitHub): Promise<DownloadRelease[]> {
     repo: context.repo.repo
   })
 
+  console.debug(response)
+
   const publishedVersions = response
     .filter(release => !release.draft && !release.prerelease)
     .map(release => release.tag_name)
